@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERDIRFORMANCE LOGI-SunExam</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #1A2530;
+            --bg-panel: #2C3E50;
+            --bg-workspace: #EAECEE;
+            --accent: #F39C12;
+            --accent-hover: #D68910;
+            --text-light: #ECF0F1;
+            --border: #34495E;
+            --header-height: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            overflow: hidden;
+        }
+
+        /* --- EN-TÊTE (TOP BAR) --- */
+        #top-header {
+            height: var(--header-height);
+            background-color: var(--accent);
+            border-bottom: 3px solid #D68910;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 20;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: baseline;
+            gap: 15px;
+        }
+
+        .header-brand h1 {
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* --- MISE EN PAGE PRINCIPALE --- */
+        #main-content {
+            display: flex;
+            height: calc(100vh - var(--header-height) - 30px);
+            width: 100%;
+        }
+
+        /* --- PANNEAU LATÉRAL --- */
+        #sidebar {
+            width: 340px;
+            min-width: 340px;
+            background-color: var(--bg-panel);
+            border-right: 1px solid var(--border);
+            z-index: 10;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            color: #BDC3C7;
+        }
+
+        input[type="text"], input[type="number"], input[type="date"], input[type="range"] {
+            width: 100%;
+            padding: 8px 10px;
+            background-color: #1A2530;
+            border: 1px solid var(--border);
+            color: var(--text-light);
+            border-radius: 4px;
+            outline: none;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus {
+            border-color: var(--accent);
+        }
+
+        input[type="range"] {
+            padding: 0;
+            cursor: pointer;
+        }
+
+        /* --- BOUTONS --- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 15px;
+            background-color: var(--bg-dark);
+            color: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-full {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .btn:hover { background-color: #34495E; transform: translateY(-1px); }
+        .btn-action { background-color: #2980B9; border: none; }
+        .btn-action:hover { background-color: #2471A3; }
+        .btn-accent { background-color: var(--accent); border: none; color: white;}
+        .btn-accent:hover { background-color: var(--accent-hover); }
+        .btn-danger { background-color: #E74C3C; border: none; }
+        .btn-danger:hover { background-color: #C0392B; }
+
+        .btn-icon-add {
+            font-size: 1.5rem;
+            width: 45px;
+            height: 45px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, border-color 0.1s;
+        }
+        .btn-icon-add:hover { background: #34495E; border-color: var(--accent); transform: scale(1.05); }
+
+        .flex-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .value-display {
+            font-weight: bold;
+            color: var(--accent);
+            float: right;
+            font-size: 1rem;
+        }
+
+        /* --- ZONE DE DESSIN --- */
+        #workspace {
+            flex-grow: 1;
+            position: relative;
+            overflow: auto;
+            background-color: var(--bg-workspace);
+            background-image: 
+                linear-gradient(#D5D8DC 1px, transparent 1px), 
+                linear-gradient(90deg, #D5D8DC 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        #canvas-container {
+            transform-origin: 0 0;
+            transition: transform 0.1s ease-out;
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            background-color: transparent;
+        }
+
+        /* --- INDICATEUR DU NORD --- */
+        #north-indicator {
+            position: fixed;
+            top: calc(var(--header-height) + 20px);
+            right: 30px;
+            background: var(--bg-panel);
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 30;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* --- PIED DE PAGE --- */
+        #main-footer {
+            height: 30px;
+            background-color: #EAECEE;
+            color: #7F8C8D;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border-top: 1px solid #BDC3C7;
+            z-index: 20;
+        }
+
+        /* --- MODALE NOTICE --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(26, 37, 48, 0.8);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+        .modal-content h2 { color: var(--accent); margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;}
+        .modal-content h3 { color: #ECF0F1; margin-top: 20px; font-size: 1.1rem; margin-bottom: 10px;}
+        .modal-content p, .modal-content li { color: #BDC3C7; line-height: 1.6; font-size: 0.95rem;}
+        .modal-content ul { padding-left: 20px; margin-bottom: 15px; }
+        .close-btn { position: absolute; top: 20px; right: 25px; font-size: 2rem; color: #BDC3C7; cursor: pointer; line-height: 1;}
+        .close-btn:hover { color: #E74C3C; }
+
+        .hidden { display: none !important; }
+        .hidden-screen { display: none; }
+        input[type="file"] { display: none; }
+
+        /* --- IMPRESSION --- */
+        @media print {
+            @page { margin: 10mm; size: A4 landscape; }
+            body { background: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            #top-header, #sidebar, #main-footer, .modal { display: none !important; }
+            #main-content { height: auto; display: block; }
+            #workspace { height: auto; width: 100%; overflow: visible; background: white; padding: 0; margin: 0; }
+            #canvas-container { display: none !important; }
+            .hidden-screen { display: block !important; }
+            #print-image { display: block !important; width: 100%; max-height: 80vh; object-fit: contain; border: 1px solid #BDC3C7; margin-top: 15px; }
+            #print-info { position: static; background: transparent; padding: 0; border: none; color: #2C3E50; text-align: center; margin-bottom: 10px; }
+            #print-info h2 { margin: 0 0 5px 0; font-size: 1.5rem; color: #D68910;}
+            #print-info p { margin: 0; font-size: 1.2rem; font-weight: bold;}
+            #north-indicator { display: block !important; position: absolute; top: 20px; right: 20px; border: 2px solid #2C3E50; background: white; transform: scale(0.8); }
+            #north-indicator text { fill: #2C3E50 !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <header id="top-header">
+        <div class="header-brand">
+            <h1>PERDIRFORMANCE LOGI-SunExam</h1>
+            <span id="current-datetime" style="color: #fff; opacity: 0.9; font-size: 0.95rem; font-weight: 500;"></span>
+        </div>
+        <div class="header-actions">
+            <button class="btn" id="btn-export">Exporter Plan (.json)</button>
+            <label class="btn" for="btn-import">Importer Plan (.json)</label>
+            <input type="file" id="btn-import" accept=".json">
+            <button class="btn btn-action" id="btn-print">🖨️ Imprimer</button>
+            <button class="btn btn-accent" id="btn-notice">📖 Notice</button>
+        </div>
+    </header>
+
+    <div id="main-content">
+        
+        <aside id="sidebar">
+
+            <div class="section">
+                <div class="section-title">Recherche Établissement</div>
+                <div class="flex-row" style="align-items: flex-end; margin-bottom: 5px;">
+                    <div class="form-group" style="flex:1; margin-bottom: 0;">
+                        <label>Code RNE / UAI</label>
+                        <input type="text" id="rne-input" placeholder="Ex: 0750001A" style="text-transform: uppercase;">
+                    </div>
+                    <button class="btn btn-accent" id="btn-search-rne" style="margin-bottom: 0;">Chercher</button>
+                </div>
+                <div id="rne-result" style="font-size: 0.85rem; margin-top: 8px; display: none;"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Date & Géolocalisation</div>
+                <div class="form-group">
+                    <label>Date de simulation</label>
+                    <input type="date" id="sim-date">
+                </div>
+                <div class="flex-row" style="margin-bottom: 12px;">
+                    <div class="form-group" style="flex:1; margin-bottom: 0;">
+                        <label>Latitude</label>
+                        <input type="number" id="geo-lat" step="0.0001" value="16.26">
+                    </div>
+                    <div class="form-group" style="flex:1; margin-bottom: 0;">
+                        <label>Longitude</label>
+                        <input type="number" id="geo-lng" step="0.0001" value="-61.58">
+                    </div>
+                    <div class="form-group" style="flex:0.8; margin-bottom: 0;">
+                        <label>Alt. (m)</label>
+                        <input type="number" id="geo-alt" step="1" value="0" title="Altimètre (IGN)">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>Heure de la journée <span class="value-display" id="time-val">12:00</span></label>
+                    <input type="range" id="sim-time" min="6" max="19" step="0.25" value="12">
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Plan de Masse & IGN</div>
+                <button class="btn btn-action btn-full" id="btn-auto-satellite" style="margin-bottom: 10px;" title="Récupère la vue aérienne officielle IGN">🌍 Vue Satellite Auto (IGN)</button>
+                <label class="btn btn-full" for="bg-upload" style="background:var(--border);">Charger une image manuellement</label>
+                <input type="file" id="bg-upload" accept="image/*">
+                
+                <div id="bg-controls" class="hidden" style="margin-top: 15px; padding-top: 15px; border-top: 1px dashed var(--border);">
+                    <div class="form-group">
+                        <label>Opacité de l'image</label>
+                        <input type="range" id="bg-opacity" min="0" max="1" step="0.1" value="0.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Échelle de l'image</label>
+                        <input type="range" id="bg-scale" min="0.1" max="5" step="0.05" value="1">
+                    </div>
+                    <div class="flex-row">
+                        <button class="btn btn-full" id="bg-toggle">Masquer</button>
+                        <button class="btn btn-danger btn-full" id="bg-remove">Supprimer</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Gestion des Bâtiments</div>
+                <button class="btn btn-accent btn-full" id="btn-add-building" style="margin-bottom: 15px;">+ Ajouter un Bâtiment</button>
+                
+                <div id="building-props" class="hidden" style="background: var(--bg-dark); padding: 15px; border-radius: 6px; border: 1px solid var(--border);">
+                    <label style="color:var(--accent); font-weight:bold; display:block; margin-bottom:10px;">Bâtiment Sélectionné</label>
+                    <div class="form-group">
+                        <label>Nom du bâtiment / Salle</label>
+                        <input type="text" id="b-name" placeholder="Ex: Bâtiment A, Préau...">
+                    </div>
+                    <div class="flex-row">
+                        <div class="form-group">
+                            <label>Largeur (m)</label>
+                            <input type="number" id="b-width" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Longueur (m)</label>
+                            <input type="number" id="b-length" min="1">
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="form-group">
+                            <label>Hauteur (m)</label>
+                            <input type="number" id="b-height" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Orientation (°)</label>
+                            <input type="number" id="b-angle" min="-180" max="180">
+                        </div>
+                    </div>
+                    <button class="btn btn-danger btn-full" id="btn-del-building">Supprimer ce Bâtiment</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Signalétique (Évacuation & PPMS)</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                    <button class="btn-icon-add" onclick="addObject('🧯', 'Extincteur')" title="Extincteur">🧯</button>
+                    <button class="btn-icon-add" onclick="addObject('🚪', 'Sortie de Secours')" title="Sortie de Secours">🚪</button>
+                    <button class="btn-icon-add" onclick="addObject('🟢', 'Rassemblement')" title="Point de Rassemblement">🟢</button>
+                    <button class="btn-icon-add" onclick="addObject('🩺', 'Secours')" title="Infirmerie / Secours">🩺</button>
+                    <button class="btn-icon-add" onclick="addObject('⚠️', 'Danger')" title="Zone de Danger / Labo">⚠️</button>
+                    <button class="btn-icon-add" onclick="addObject('🚰', 'Point d\'eau')" title="Point d'eau / RIA">🚰</button>
+                    <button class="btn-icon-add" onclick="addObject('♿', 'PMR')" title="Espace d'attente sécurisé">♿</button>
+                    <button class="btn-icon-add" onclick="addObject('➡️', 'Direction Évacuation')" title="Flèche directionnelle">➡️</button>
+                    <button class="btn-icon-add" onclick="addObject('➔', 'Évacuation (Verte)', '#2ECC71')" title="Flèche d'évacuation (Verte)"><span style="color:#2ECC71; font-weight:bold; font-size:1.2rem;">➔</span></button>
+                    <button class="btn-icon-add" onclick="addObject('➔', 'Évacuation (Rouge)', '#E74C3C')" title="Flèche d'évacuation (Rouge)"><span style="color:#E74C3C; font-weight:bold; font-size:1.2rem;">➔</span></button>
+                    <button class="btn-icon-add" onclick="addObject('➔', 'Flèche (Bleue)', '#3498DB')" title="Flèche directionnelle (Bleue)"><span style="color:#3498DB; font-weight:bold; font-size:1.2rem;">➔</span></button>
+                    <button class="btn-icon-add" onclick="addObject('❤️‍🩹', 'Défibrillateur (DAE)')" title="Défibrillateur">❤️‍🩹</button>
+                    <button class="btn-icon-add" onclick="addObject('🔔', 'Alarme Incendie')" title="Alarme / Déclencheur manuel">🔔</button>
+                    <button class="btn-icon-add" onclick="addObject('⚡', 'Coupure Électrique')" title="Armoire électrique / Coupure générale">⚡</button>
+                    <button class="btn-icon-add" onclick="addObject('🛑', 'Arrêt d\'Urgence')" title="Coupure Gaz / Arrêt d'urgence">🛑</button>
+                </div>
+
+                <div id="object-props" class="hidden" style="background: var(--bg-dark); padding: 15px; border-radius: 6px; border: 1px solid var(--border);">
+                    <label style="color:var(--accent); font-weight:bold; display:block; margin-bottom:10px;">Objet Sélectionné</label>
+                    <div class="form-group">
+                        <label>Type / Nom</label>
+                        <input type="text" id="o-type" readonly style="background: var(--bg-panel); color: #BDC3C7;">
+                    </div>
+                    <div class="form-group">
+                        <label>Orientation (°)</label>
+                        <input type="number" id="o-angle" min="-180" max="180" step="15" value="0" title="Permet d'orienter l'objet (ex: Flèches)">
+                    </div>
+                    <button class="btn btn-danger btn-full" id="btn-del-object">Supprimer cet objet</button>
+                </div>
+            </div>
+
+            <!-- NOUVELLE SECTION : ANNOTATIONS TEXTUELLES -->
+            <div class="section">
+                <div class="section-title">Annotations Textuelles</div>
+                <button class="btn btn-accent btn-full" id="btn-add-text" style="margin-bottom: 15px;">+ Ajouter un Texte</button>
+                
+                <div id="text-props" class="hidden" style="background: var(--bg-dark); padding: 15px; border-radius: 6px; border: 1px solid var(--border);">
+                    <label style="color:var(--accent); font-weight:bold; display:block; margin-bottom:10px;">Texte Sélectionné</label>
+                    <div class="form-group">
+                        <label>Contenu</label>
+                        <textarea id="t-content" rows="3" style="width: 100%; padding: 8px; background-color: #1A2530; border: 1px solid var(--border); color: var(--text-light); border-radius: 4px; outline: none; resize: vertical;"></textarea>
+                    </div>
+                    <div class="flex-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Taille</label>
+                            <input type="number" id="t-size" min="10" max="200" step="2" value="24">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Angle (°)</label>
+                            <input type="number" id="t-angle" min="-180" max="180" step="15" value="0">
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Couleur Texte</label>
+                            <input type="color" id="t-color" value="#FFFFFF" style="height: 35px; padding: 2px;">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Couleur Fond</label>
+                            <div style="display: flex; gap: 5px; align-items: center;">
+                                <input type="checkbox" id="t-bg-enable" title="Activer le fond">
+                                <input type="color" id="t-bg-color" value="#E74C3C" style="height: 35px; padding: 2px; flex-grow: 1;">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger btn-full" id="btn-del-text" style="margin-top: 10px;">Supprimer ce texte</button>
+                </div>
+            </div>
+        </aside>
+
+        <main id="workspace">
+            <div id="print-info" class="hidden-screen"></div>
+            <img id="print-image" class="hidden-screen" alt="Plan" />
+
+            <div id="canvas-container">
+                <canvas id="sim-canvas" width="4000" height="3000"></canvas>
+            </div>
+            
+            <div id="north-indicator" title="Orientation de la carte">
+                <svg width="60" height="60" viewBox="0 0 60 60">
+                    <polygon points="30,12 34,28 30,30" fill="#E74C3C" />
+                    <polygon points="30,12 26,28 30,30" fill="#C0392B" />
+                    <polygon points="30,48 34,32 30,30" fill="#BDC3C7" />
+                    <polygon points="30,48 26,32 30,30" fill="#95A5A6" />
+                    <polygon points="48,30 32,26 30,30" fill="#BDC3C7" />
+                    <polygon points="48,30 32,34 30,30" fill="#95A5A6" />
+                    <polygon points="12,30 28,26 30,30" fill="#BDC3C7" />
+                    <polygon points="12,30 28,34 30,30" fill="#95A5A6" />
+                    
+                    <text x="30" y="10" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#ECF0F1" text-anchor="middle">N</text>
+                    <text x="30" y="58" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#ECF0F1" text-anchor="middle">S</text>
+                    <text x="56" y="34" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#ECF0F1" text-anchor="middle">E</text>
+                    <text x="4" y="34" font-family="'Segoe UI', sans-serif" font-size="10" font-weight="bold" fill="#ECF0F1" text-anchor="middle">O</text>
+                </svg>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Modale de Notice -->
+    <div id="modal-notice" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="close-notice">&times;</span>
+            <h2>Notice d'utilisation : LOGI-SunExam</h2>
+            
+            <p>Bienvenue dans le simulateur de modélisation pour EPLE (Ensoleillement, Aménagement et Sécurité). Cet outil est conçu pour assister les équipes de direction.</p>
+            
+            <h3>1. Localisation & Altimétrie IGN</h3>
+            <ul>
+                <li><strong>Recherche RNE :</strong> Saisissez le RNE de l'établissement. L'outil récupère automatiquement la géolocalisation et télécharge le <strong>plan satellite IGN</strong> de l'État.</li>
+                <li><strong>Altimètre :</strong> Lors d'une recherche ou de l'importation de la vue IGN, l'altitude locale exacte est calculée via le service altimétrique de la Géoplateforme IGN.</li>
+            </ul>
+
+            <h3>2. Bâtiments (Ombres et Noms)</h3>
+            <ul>
+                <li>Ajoutez des bâtiments en 3D (Blocs) pour évaluer la course des ombres, l'ensoleillement et les îlots de chaleur (Démarche E3D).</li>
+                <li><strong>Nouveau :</strong> Attribuez un <strong>Nom</strong> ou le libellé d'une salle à chaque bâtiment pour clarifier votre plan de masse.</li>
+            </ul>
+
+            <h3>3. Plan d'Évacuation & PPMS</h3>
+            <ul>
+                <li><strong>Signalétique :</strong> Utilisez la librairie d'objets (panneau latéral en bas) pour cliquer et ajouter des icônes de sécurité sur votre plan : Extincteurs, Points de rassemblement, Sorties, Zones de danger, etc.</li>
+                <li>Déplacez-les librement sur la carte ou à l'intérieur des bâtiments. Sélectionnez-les pour les supprimer.</li>
+            </ul>
+
+            <h3>4. Outils et Export</h3>
+            <ul>
+                <li><strong>Impression (🖨️) :</strong> Permet d'éditer une version propre du plan pour vos dossiers de sécurité (Registre de sécurité, Document Unique, PPMS) ou de logistique d'examen.</li>
+                <li>Sauvegardez votre projet dans un fichier `.json` pour le mettre à jour plus tard.</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer id="main-footer">
+        Outil créé par Yannis CHRISTON 2026 à l'aide de l'IA générative
+    </footer>
+
+    <script>
+        // --- ÉTAT DE L'APPLICATION ---
+        const state = {
+            lat: 16.26,
+            lng: -61.58,
+            alt: 0,
+            date: new Date(),
+            time: 12,
+            buildings: [],
+            objects: [], // Nouvel array pour les objets de signalétique
+            texts: [], // Nouvel array pour les annotations textuelles
+            bgImage: {
+                src: null,
+                imgObj: null,
+                opacity: 0.5,
+                scale: 1,
+                x: 2000,
+                y: 1500,
+                visible: true
+            },
+            selectedBuildingId: null,
+            selectedObjectId: null, // Nouvel état pour les objets sélectionnés
+            selectedTextId: null, // Nouvel état pour les textes sélectionnés
+            zoom: 1
+        };
+
+        const PIXELS_PER_METER = 5;
+        let renderPending = false; 
+
+        // --- ELEMENTS DOM ---
+        const canvas = document.getElementById('sim-canvas');
+        const ctx = canvas.getContext('2d');
+        const workspace = document.getElementById('workspace');
+        const canvasContainer = document.getElementById('canvas-container');
+
+        // Inputs
+        const inDate = document.getElementById('sim-date');
+        const inTime = document.getElementById('sim-time');
+        const inLat = document.getElementById('geo-lat');
+        const inLng = document.getElementById('geo-lng');
+        const inAlt = document.getElementById('geo-alt');
+        const timeVal = document.getElementById('time-val');
+        
+        // Calque
+        const inBgUpload = document.getElementById('bg-upload');
+        const divBgControls = document.getElementById('bg-controls');
+        const inBgOpacity = document.getElementById('bg-opacity');
+        const inBgScale = document.getElementById('bg-scale');
+        const btnBgToggle = document.getElementById('bg-toggle');
+        const btnBgRemove = document.getElementById('bg-remove');
+
+        // Bâtiments
+        const divBuildingProps = document.getElementById('building-props');
+        const inBName = document.getElementById('b-name');
+        const inBWidth = document.getElementById('b-width');
+        const inBLength = document.getElementById('b-length');
+        const inBHeight = document.getElementById('b-height');
+        const inBAngle = document.getElementById('b-angle');
+
+        // Objets / PPMS
+        const divObjectProps = document.getElementById('object-props');
+        const inOType = document.getElementById('o-type');
+        const inOAngle = document.getElementById('o-angle');
+
+        // Textes (Annotations)
+        const divTextProps = document.getElementById('text-props');
+        const inTContent = document.getElementById('t-content');
+        const inTSize = document.getElementById('t-size');
+        const inTAngle = document.getElementById('t-angle');
+        const inTColor = document.getElementById('t-color');
+        const inTBgColor = document.getElementById('t-bg-color');
+        const inTBgEnable = document.getElementById('t-bg-enable');
+
+        state.date.setMonth(5); 
+        state.date.setDate(15);
+        inDate.value = state.date.toISOString().split('T')[0];
+
+        function requestDraw() {
+            if (!renderPending) {
+                renderPending = true;
+                requestAnimationFrame(() => {
+                    draw();
+                    renderPending = false;
+                });
+            }
+        }
+
+        // --- ALTIMETRIE IGN (API Géoplateforme) ---
+        async function fetchAltitude(lat, lng) {
+            try {
+                // API gratuite IGN pour récupérer l'élévation d'un point
+                // Ajout du paramètre "resource" désormais obligatoire sur la Géoplateforme
+                const response = await fetch(`https://data.geopf.fr/altimetrie/1.0/calcul/alti/rest/elevation.json?lon=${lng}&lat=${lat}&resource=ign_rge_alti_wld`);
+                const data = await response.json();
+                if (data && data.elevations && data.elevations.length > 0) {
+                    // On exclut les valeurs d'erreur IGN aberrantes (ex: -99999 hors carte)
+                    if (data.elevations[0].z > -1000) {
+                        state.alt = data.elevations[0].z;
+                        inAlt.value = Math.round(state.alt);
+                        autoSave();
+                        return state.alt;
+                    }
+                }
+            } catch (error) {
+                console.warn("Erreur lors de la récupération de l'altitude IGN :", error);
+            }
+            return null;
+        }
+
+        // --- GENERATION SATELLITE IGN ---
+        async function fetchAndSetSatelliteBackground(lat, lng, btnElement = null) {
+            if (btnElement) btnElement.textContent = "⏳ Chargement IGN...";
+            
+            try {
+                const zoom = 18;
+                const x = Math.floor((lng + 180) / 360 * Math.pow(2, zoom));
+                const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom));
+
+                const tempCanvas = document.createElement('canvas');
+                const TILE_SIZE = 256;
+                const GRID_SIZE = 3; 
+                tempCanvas.width = TILE_SIZE * GRID_SIZE;
+                tempCanvas.height = TILE_SIZE * GRID_SIZE;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                const tilePromises = [];
+                let hasError = false;
+
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        tilePromises.push(new Promise((resolve) => {
+                            const img = new Image();
+                            img.crossOrigin = "Anonymous";
+                            img.onload = () => {
+                                tempCtx.drawImage(img, (dx + 1) * TILE_SIZE, (dy + 1) * TILE_SIZE);
+                                resolve();
+                            };
+                            img.onerror = () => { hasError = true; resolve(); };
+                            img.src = `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX=${zoom}&TILEROW=${y + dy}&TILECOL=${x + dx}`;
+                        }));
+                    }
+                }
+
+                await Promise.all(tilePromises);
+                if (hasError) console.warn("Certaines tuiles IGN n'ont pas pu être chargées.");
+                const dataUrl = tempCanvas.toDataURL('image/jpeg', 0.8);
+                
+                await new Promise((resolve) => {
+                    const finalImg = new Image();
+                    finalImg.onload = () => {
+                        state.bgImage.src = dataUrl;
+                        state.bgImage.imgObj = finalImg;
+                        state.bgImage.visible = true;
+                        state.bgImage.x = 2000;
+                        state.bgImage.y = 1500;
+                        state.bgImage.scale = 2; 
+                        state.bgImage.opacity = 0.8;
+                        updateUI();
+                        requestDraw();
+                        resolve();
+                    };
+                    finalImg.src = dataUrl;
+                });
+
+                if (btnElement) btnElement.textContent = "🌍 Vue Satellite Auto (IGN)";
+                return true;
+            } catch (error) {
+                console.error("Erreur génération satellite:", error);
+                if (btnElement) btnElement.textContent = "❌ Erreur IGN";
+                setTimeout(() => { if (btnElement) btnElement.textContent = "🌍 Vue Satellite Auto (IGN)"; }, 3000);
+                return false;
+            }
+        }
+
+        document.getElementById('btn-auto-satellite').addEventListener('click', async (e) => {
+            fetchAltitude(state.lat, state.lng); // Met à jour l'altimètre en même temps
+            await fetchAndSetSatelliteBackground(state.lat, state.lng, e.target);
+            autoSave();
+        });
+
+        // --- RECHERCHE PAR RNE ---
+        document.getElementById('btn-search-rne').addEventListener('click', async () => {
+            const rne = document.getElementById('rne-input').value.trim().toUpperCase();
+            const resultDiv = document.getElementById('rne-result');
+            
+            if (!rne) return;
+
+            resultDiv.style.display = 'block';
+            resultDiv.style.color = '#BDC3C7';
+            resultDiv.textContent = 'Recherche en cours...';
+
+            try {
+                const url = `https://data.education.gouv.fr/api/explore/v2.1/catalog/datasets/fr-en-annuaire-education/records?where=identifiant_de_l_etablissement="${rne}"&limit=1`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    const etab = data.results[0];
+                    if (etab.latitude && etab.longitude) {
+                        state.lat = parseFloat(etab.latitude);
+                        state.lng = parseFloat(etab.longitude);
+                        
+                        inLat.value = state.lat.toFixed(4);
+                        inLng.value = state.lng.toFixed(4);
+                        
+                        resultDiv.style.color = '#2ECC71';
+                        resultDiv.textContent = `✓ Trouvé : ${etab.nom_etablissement}. Calcul de l'altitude...`;
+
+                        // 1. Récupération immédiate de l'altitude
+                        const alt = await fetchAltitude(state.lat, state.lng);
+                        const altText = alt !== null ? ` (Alt: ${Math.round(alt)}m)` : '';
+                        
+                        // 2. Affichage de l'altitude avant le chargement de l'image
+                        resultDiv.textContent = `✓ Trouvé : ${etab.nom_etablissement}${altText}. Chargement IGN...`;
+                        
+                        // 3. Téléchargement du fond de carte
+                        await fetchAndSetSatelliteBackground(state.lat, state.lng);
+                        
+                        // 4. Terminé
+                        resultDiv.textContent = `✓ Trouvé : ${etab.nom_etablissement}${altText}`;
+
+                        autoSave(); requestDraw();
+                    } else {
+                        resultDiv.style.color = '#E74C3C';
+                        resultDiv.textContent = `Coordonnées GPS manquantes pour ce RNE.`;
+                    }
+                } else {
+                    resultDiv.style.color = '#E74C3C';
+                    resultDiv.textContent = `Établissement introuvable.`;
+                }
+            } catch (error) {
+                resultDiv.style.color = '#E74C3C';
+                resultDiv.textContent = `Erreur réseau avec l'API.`;
+            }
+        });
+
+        // --- GESTION DU ZOOM ---
+        function applyZoom() {
+            canvasContainer.style.transform = `scale(${state.zoom})`;
+        }
+
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) / state.zoom,
+                y: (e.clientY - rect.top) / state.zoom
+            };
+        }
+
+        // --- GESTION DES OBJETS DE SIGNALETIQUE ---
+        function addObject(icon, type, color = null) {
+            const newObj = {
+                id: Date.now(),
+                icon: icon,
+                type: type,
+                x: 2000,
+                y: 1500,
+                angle: 0,
+                color: color
+            };
+            state.objects.push(newObj);
+            state.selectedObjectId = newObj.id;
+            state.selectedBuildingId = null;
+
+            workspace.scrollLeft = 2000 * state.zoom - workspace.clientWidth / 2;
+            workspace.scrollTop = 1500 * state.zoom - workspace.clientHeight / 2;
+
+            updateUI(); autoSave(); requestDraw();
+        }
+
+        document.getElementById('btn-del-object').addEventListener('click', () => {
+            if(!state.selectedObjectId) return;
+            state.objects = state.objects.filter(o => o.id !== state.selectedObjectId);
+            state.selectedObjectId = null;
+            updateUI(); autoSave(); requestDraw();
+        });
+
+        inOAngle.addEventListener('input', (e) => {
+            if(!state.selectedObjectId) return;
+            const obj = state.objects.find(o => o.id === state.selectedObjectId);
+            obj.angle = parseFloat(e.target.value) || 0;
+            autoSave(); requestDraw();
+        });
+
+        // --- GESTION DES TEXTES WYSWIYG ---
+        document.getElementById('btn-add-text').addEventListener('click', () => {
+            const newText = {
+                id: Date.now(),
+                text: "Saisissez votre texte ici\n(Plusieurs lignes possibles)",
+                x: 2000,
+                y: 1500,
+                size: 32,
+                angle: 0,
+                color: "#FFFFFF",
+                hasBg: true,
+                bgColor: "#C0392B"
+            };
+            state.texts.push(newText);
+            state.selectedTextId = newText.id;
+            state.selectedBuildingId = null;
+            state.selectedObjectId = null;
+
+            workspace.scrollLeft = 2000 * state.zoom - workspace.clientWidth / 2;
+            workspace.scrollTop = 1500 * state.zoom - workspace.clientHeight / 2;
+
+            updateUI(); autoSave(); requestDraw();
+        });
+
+        const updateSelectedText = () => {
+            if(!state.selectedTextId) return;
+            const t = state.texts.find(t => t.id === state.selectedTextId);
+            t.text = inTContent.value;
+            t.size = parseInt(inTSize.value) || 24;
+            t.angle = parseFloat(inTAngle.value) || 0;
+            t.color = inTColor.value;
+            t.hasBg = inTBgEnable.checked;
+            t.bgColor = inTBgColor.value;
+            autoSave(); requestDraw();
+        };
+
+        inTContent.addEventListener('input', updateSelectedText);
+        inTSize.addEventListener('input', updateSelectedText);
+        inTAngle.addEventListener('input', updateSelectedText);
+        inTColor.addEventListener('input', updateSelectedText);
+        inTBgEnable.addEventListener('change', updateSelectedText);
+        inTBgColor.addEventListener('input', updateSelectedText);
+
+        document.getElementById('btn-del-text').addEventListener('click', () => {
+            if(!state.selectedTextId) return;
+            state.texts = state.texts.filter(t => t.id !== state.selectedTextId);
+            state.selectedTextId = null;
+            updateUI(); autoSave(); requestDraw();
+        });
+
+
+        // --- FONCTIONS DE DESSIN ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (state.bgImage.imgObj && state.bgImage.visible) {
+                ctx.save();
+                ctx.globalAlpha = state.bgImage.opacity;
+                const imgW = state.bgImage.imgObj.width * state.bgImage.scale;
+                const imgH = state.bgImage.imgObj.height * state.bgImage.scale;
+                ctx.drawImage(state.bgImage.imgObj, state.bgImage.x - imgW/2, state.bgImage.y - imgH/2, imgW, imgH);
+                ctx.restore();
+            }
+
+            const simDate = new Date(state.date);
+            const hours = Math.floor(state.time);
+            const minutes = Math.round((state.time - hours) * 60);
+            simDate.setHours(hours, minutes, 0, 0);
+
+            const sunPos = SunCalc.getPosition(simDate, state.lat, state.lng);
+            
+            let drawShadows = false;
+            let sunDx = 0, sunDy = 0;
+
+            if (sunPos.altitude > 0.02) { 
+                drawShadows = true;
+                const shadowLengthMult = Math.min(1 / Math.tan(sunPos.altitude), 15);
+                sunDx = Math.sin(sunPos.azimuth) * shadowLengthMult;
+                sunDy = -Math.cos(sunPos.azimuth) * shadowLengthMult;
+            }
+
+            if (drawShadows) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+                state.buildings.forEach(b => {
+                    const w = b.width * PIXELS_PER_METER;
+                    const l = b.length * PIXELS_PER_METER;
+                    const h = b.height * PIXELS_PER_METER;
+
+                    const cos = Math.cos(b.angle * Math.PI / 180);
+                    const sin = Math.sin(b.angle * Math.PI / 180);
+                    
+                    const getCorner = (dx, dy) => ({
+                        x: b.x + (dx * cos - dy * sin),
+                        y: b.y + (dx * sin + dy * cos)
+                    });
+
+                    const c1 = getCorner(-w/2, -l/2); 
+                    const c2 = getCorner(w/2, -l/2);  
+                    const c3 = getCorner(w/2, l/2);   
+                    const c4 = getCorner(-w/2, l/2);  
+
+                    const p1 = { x: c1.x + sunDx * h, y: c1.y + sunDy * h };
+                    const p2 = { x: c2.x + sunDx * h, y: c2.y + sunDy * h };
+                    const p3 = { x: c3.x + sunDx * h, y: c3.y + sunDy * h };
+                    const p4 = { x: c4.x + sunDx * h, y: c4.y + sunDy * h };
+
+                    const drawQuad = (pA, pB, pC, pD) => {
+                        ctx.beginPath();
+                        ctx.moveTo(pA.x, pA.y); ctx.lineTo(pB.x, pB.y);
+                        ctx.lineTo(pC.x, pC.y); ctx.lineTo(pD.x, pD.y);
+                        ctx.closePath();
+                        ctx.fill();
+                    };
+
+                    drawQuad(p1, p2, p3, p4);
+                    drawQuad(c1, c2, p2, p1);
+                    drawQuad(c2, c3, p3, p2);
+                    drawQuad(c3, c4, p4, p3);
+                    drawQuad(c4, c1, p1, p4);
+                });
+            }
+
+            // Dessin des Bâtiments
+            state.buildings.forEach(b => {
+                const w = b.width * PIXELS_PER_METER;
+                const l = b.length * PIXELS_PER_METER;
+                
+                ctx.save();
+                ctx.translate(b.x, b.y);
+                ctx.rotate(b.angle * Math.PI / 180);
+                
+                ctx.fillStyle = b.id === state.selectedBuildingId ? '#F1C40F' : '#95A5A6';
+                ctx.strokeStyle = '#2C3E50';
+                ctx.lineWidth = 2;
+                
+                ctx.fillRect(-w/2, -l/2, w, l);
+                ctx.strokeRect(-w/2, -l/2, w, l);
+
+                ctx.fillStyle = '#E74C3C';
+                ctx.fillRect(-w/2, -l/2, w, 4); 
+
+                // Affichage du nom du bâtiment
+                if (b.name) {
+                    ctx.fillStyle = b.id === state.selectedBuildingId ? '#2C3E50' : '#FFF';
+                    ctx.font = 'bold 16px "Segoe UI"';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(b.name, 0, 0);
+                }
+
+                ctx.restore();
+            });
+
+            // Dessin des Objets de signalétique
+            state.objects.forEach(obj => {
+                ctx.save();
+                ctx.translate(obj.x, obj.y);
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if(obj.id === state.selectedObjectId) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 22, 0, 2*Math.PI);
+                    ctx.fillStyle = 'rgba(243, 156, 18, 0.4)';
+                    ctx.fill();
+                    ctx.strokeStyle = '#F39C12';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Emoji Icon avec rotation
+                ctx.save();
+                ctx.rotate((obj.angle || 0) * Math.PI / 180);
+                
+                if (obj.color) {
+                    // Pour les caractères textuels (flèches), on applique la couleur demandée
+                    ctx.font = 'bold 36px "Segoe UI"';
+                    ctx.fillStyle = obj.color;
+                    ctx.fillText(obj.icon, 0, 0);
+                } else {
+                    // Par défaut pour les emojis classiques
+                    ctx.font = '28px "Segoe UI"';
+                    ctx.fillText(obj.icon, 0, 0);
+                }
+                ctx.restore();
+                
+                // Texte du label (toujours horizontal pour rester lisible)
+                ctx.font = 'bold 12px "Segoe UI"';
+                const txtWidth = ctx.measureText(obj.type).width;
+                
+                // Fond du texte pour lisibilité
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.fillRect(-txtWidth/2 - 4, 16, txtWidth + 8, 18);
+                
+                ctx.fillStyle = '#2C3E50';
+                ctx.fillText(obj.type, 0, 25);
+                
+                ctx.restore();
+            });
+
+            // Dessin des Textes Libres (Annotations)
+            state.texts.forEach(t => {
+                ctx.save();
+                ctx.translate(t.x, t.y);
+                ctx.rotate((t.angle || 0) * Math.PI / 180);
+                
+                ctx.font = `bold ${t.size}px "Segoe UI"`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                const lines = t.text.split('\n');
+                const lineHeight = t.size * 1.2;
+                const totalHeight = lines.length * lineHeight;
+
+                // Mesurer la largeur maximale
+                let maxWidth = 0;
+                lines.forEach(l => {
+                    maxWidth = Math.max(maxWidth, ctx.measureText(l).width);
+                });
+
+                // Dessin du fond optionnel
+                if (t.hasBg) {
+                    ctx.fillStyle = t.bgColor;
+                    ctx.beginPath();
+                    ctx.roundRect(-maxWidth/2 - 15, -totalHeight/2 - 10, maxWidth + 30, totalHeight + 20, 6);
+                    ctx.fill();
+                    // Contour si fond activé
+                    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // Affichage multi-lignes
+                ctx.fillStyle = t.color;
+                lines.forEach((l, i) => {
+                    const yPos = -totalHeight/2 + (i + 0.5) * lineHeight;
+                    ctx.fillText(l, 0, yPos);
+                });
+
+                // Indicateur de sélection
+                if (t.id === state.selectedTextId) {
+                    ctx.strokeStyle = '#F39C12';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([8, 6]);
+                    ctx.strokeRect(-maxWidth/2 - 20, -totalHeight/2 - 15, maxWidth + 40, totalHeight + 30);
+                    ctx.setLineDash([]);
+                }
+
+                ctx.restore();
+            });
+        }
+
+        // --- GESTION DES INTERACTIONS CANVAS ---
+        let dragTarget = null; 
+        let isDragging = false;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
+        canvas.addEventListener('mousedown', (e) => {
+            const pos = getMousePos(e);
+            const mouseX = pos.x;
+            const mouseY = pos.y;
+
+            // 0. Check Textes Libres (en absolute priorité)
+            for (let i = state.texts.length - 1; i >= 0; i--) {
+                const t = state.texts[i];
+                ctx.font = `bold ${t.size}px "Segoe UI"`;
+                const lines = t.text.split('\n');
+                const totalHeight = lines.length * (t.size * 1.2);
+                let maxWidth = 0;
+                lines.forEach(l => maxWidth = Math.max(maxWidth, ctx.measureText(l).width));
+
+                const dx = mouseX - t.x;
+                const dy = mouseY - t.y;
+                const cos = Math.cos(-t.angle * Math.PI / 180);
+                const sin = Math.sin(-t.angle * Math.PI / 180);
+                const localX = dx * cos - dy * sin;
+                const localY = dx * sin + dy * cos;
+
+                const halfW = maxWidth / 2 + 20;
+                const halfH = totalHeight / 2 + 15;
+
+                if (localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH) {
+                    state.selectedTextId = t.id;
+                    state.selectedObjectId = null;
+                    state.selectedBuildingId = null;
+                    dragTarget = 'text';
+                    isDragging = true;
+                    dragOffsetX = dx;
+                    dragOffsetY = dy;
+                    updateUI(); requestDraw();
+                    return;
+                }
+            }
+
+            // 1. Check Objets Signalétique
+            for (let i = state.objects.length - 1; i >= 0; i--) {
+                const obj = state.objects[i];
+                // Distance au clic (Cercle de 20px)
+                if (Math.hypot(mouseX - obj.x, mouseY - obj.y) <= 20) {
+                    state.selectedObjectId = obj.id;
+                    state.selectedBuildingId = null;
+                    state.selectedTextId = null;
+                    dragTarget = 'object';
+                    isDragging = true;
+                    dragOffsetX = mouseX - obj.x;
+                    dragOffsetY = mouseY - obj.y;
+                    updateUI(); requestDraw();
+                    return;
+                }
+            }
+
+            // 2. Check Bâtiments
+            for (let i = state.buildings.length - 1; i >= 0; i--) {
+                const b = state.buildings[i];
+                const w = b.width * PIXELS_PER_METER;
+                const l = b.length * PIXELS_PER_METER;
+                
+                const dx = mouseX - b.x;
+                const dy = mouseY - b.y;
+                const cos = Math.cos(-b.angle * Math.PI / 180);
+                const sin = Math.sin(-b.angle * Math.PI / 180);
+                const localX = dx * cos - dy * sin;
+                const localY = dx * sin + dy * cos;
+
+                if (localX >= -w/2 && localX <= w/2 && localY >= -l/2 && localY <= l/2) {
+                    state.selectedBuildingId = b.id;
+                    state.selectedObjectId = null;
+                    state.selectedTextId = null;
+                    dragTarget = 'building';
+                    isDragging = true;
+                    dragOffsetX = dx;
+                    dragOffsetY = dy;
+                    updateUI(); requestDraw();
+                    return;
+                }
+            }
+
+            // Désélectionner tout
+            state.selectedBuildingId = null;
+            state.selectedObjectId = null;
+            state.selectedTextId = null;
+            updateUI();
+
+            // 3. Check Background
+            if (state.bgImage.imgObj && state.bgImage.visible) {
+                const imgW = state.bgImage.imgObj.width * state.bgImage.scale;
+                const imgH = state.bgImage.imgObj.height * state.bgImage.scale;
+                if (Math.abs(mouseX - state.bgImage.x) <= imgW/2 && Math.abs(mouseY - state.bgImage.y) <= imgH/2) {
+                    dragTarget = 'bg';
+                    isDragging = true;
+                    dragOffsetX = mouseX - state.bgImage.x;
+                    dragOffsetY = mouseY - state.bgImage.y;
+                }
+            }
+            requestDraw();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const pos = getMousePos(e);
+
+            if (dragTarget === 'building' && state.selectedBuildingId) {
+                const b = state.buildings.find(b => b.id === state.selectedBuildingId);
+                b.x = pos.x - dragOffsetX;
+                b.y = pos.y - dragOffsetY;
+                autoSave(); requestDraw();
+            } else if (dragTarget === 'object' && state.selectedObjectId) {
+                const obj = state.objects.find(o => o.id === state.selectedObjectId);
+                obj.x = pos.x - dragOffsetX;
+                obj.y = pos.y - dragOffsetY;
+                autoSave(); requestDraw();
+            } else if (dragTarget === 'text' && state.selectedTextId) {
+                const t = state.texts.find(t => t.id === state.selectedTextId);
+                t.x = pos.x - dragOffsetX;
+                t.y = pos.y - dragOffsetY;
+                autoSave(); requestDraw();
+            } else if (dragTarget === 'bg') {
+                state.bgImage.x = pos.x - dragOffsetX;
+                state.bgImage.y = pos.y - dragOffsetY;
+                autoSave(); requestDraw();
+            }
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            dragTarget = null;
+        });
+
+        // --- GESTION DE L'INTERFACE ---
+        function formatTime(decimalTime) {
+            const h = Math.floor(decimalTime);
+            const m = Math.round((decimalTime - h) * 60).toString().padStart(2, '0');
+            return `${h}h${m}`;
+        }
+
+        function updateUI() {
+            // Affichage Bâtiment
+            if (state.selectedBuildingId) {
+                divBuildingProps.classList.remove('hidden');
+                divObjectProps.classList.add('hidden');
+                divTextProps.classList.add('hidden');
+                const b = state.buildings.find(b => b.id === state.selectedBuildingId);
+                inBName.value = b.name || '';
+                inBWidth.value = b.width;
+                inBLength.value = b.length;
+                inBHeight.value = b.height;
+                inBAngle.value = b.angle;
+            } 
+            // Affichage Objet PPMS
+            else if (state.selectedObjectId) {
+                divObjectProps.classList.remove('hidden');
+                divBuildingProps.classList.add('hidden');
+                divTextProps.classList.add('hidden');
+                const obj = state.objects.find(o => o.id === state.selectedObjectId);
+                inOType.value = obj.type;
+                inOAngle.value = obj.angle || 0;
+            } 
+            // Affichage Texte
+            else if (state.selectedTextId) {
+                divTextProps.classList.remove('hidden');
+                divBuildingProps.classList.add('hidden');
+                divObjectProps.classList.add('hidden');
+                const t = state.texts.find(t => t.id === state.selectedTextId);
+                inTContent.value = t.text;
+                inTSize.value = t.size;
+                inTAngle.value = t.angle || 0;
+                inTColor.value = t.color;
+                inTBgEnable.checked = t.hasBg;
+                inTBgColor.value = t.bgColor;
+            }
+            // Rien sélectionné
+            else {
+                divBuildingProps.classList.add('hidden');
+                divObjectProps.classList.add('hidden');
+                divTextProps.classList.add('hidden');
+            }
+
+            // Affichage Contrôles Background
+            if (state.bgImage.src) {
+                divBgControls.classList.remove('hidden');
+                inBgOpacity.value = state.bgImage.opacity;
+                inBgScale.value = state.bgImage.scale;
+                btnBgToggle.textContent = state.bgImage.visible ? 'Masquer' : 'Afficher';
+            } else {
+                divBgControls.classList.add('hidden');
+            }
+        }
+
+        inTime.addEventListener('input', (e) => { state.time = parseFloat(e.target.value); timeVal.textContent = formatTime(state.time); requestDraw(); });
+        inTime.addEventListener('change', autoSave);
+        inDate.addEventListener('change', (e) => { state.date = new Date(e.target.value); autoSave(); requestDraw(); });
+        inLat.addEventListener('change', (e) => { state.lat = parseFloat(e.target.value); fetchAltitude(state.lat, state.lng); autoSave(); requestDraw(); });
+        inLng.addEventListener('change', (e) => { state.lng = parseFloat(e.target.value); fetchAltitude(state.lat, state.lng); autoSave(); requestDraw(); });
+        inAlt.addEventListener('change', (e) => { state.alt = parseFloat(e.target.value); autoSave(); });
+
+        document.getElementById('btn-add-building').addEventListener('click', () => {
+            const newBuilding = {
+                id: Date.now(),
+                name: '',
+                x: 2000, y: 1500,
+                width: 20, length: 10, height: 8, angle: 0
+            };
+            state.buildings.push(newBuilding);
+            state.selectedBuildingId = newBuilding.id;
+            state.selectedObjectId = null;
+            state.selectedTextId = null;
+            
+            workspace.scrollLeft = 2000 * state.zoom - workspace.clientWidth / 2;
+            workspace.scrollTop = 1500 * state.zoom - workspace.clientHeight / 2;
+            updateUI(); autoSave(); requestDraw();
+        });
+
+        const updateSelectedBuilding = () => {
+            if(!state.selectedBuildingId) return;
+            const b = state.buildings.find(b => b.id === state.selectedBuildingId);
+            b.name = inBName.value;
+            b.width = parseFloat(inBWidth.value) || 1;
+            b.length = parseFloat(inBLength.value) || 1;
+            b.height = parseFloat(inBHeight.value) || 1;
+            b.angle = parseFloat(inBAngle.value) || 0;
+            autoSave(); requestDraw();
+        };
+
+        inBName.addEventListener('input', updateSelectedBuilding);
+        inBWidth.addEventListener('input', updateSelectedBuilding);
+        inBLength.addEventListener('input', updateSelectedBuilding);
+        inBHeight.addEventListener('input', updateSelectedBuilding);
+        inBAngle.addEventListener('input', updateSelectedBuilding);
+
+        document.getElementById('btn-del-building').addEventListener('click', () => {
+            if(!state.selectedBuildingId) return;
+            state.buildings = state.buildings.filter(b => b.id !== state.selectedBuildingId);
+            state.selectedBuildingId = null;
+            updateUI(); autoSave(); requestDraw();
+        });
+
+        inBgUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        state.bgImage.src = event.target.result;
+                        state.bgImage.imgObj = img;
+                        state.bgImage.visible = true;
+                        updateUI(); autoSave(); requestDraw();
+                    }
+                    img.src = event.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        inBgOpacity.addEventListener('input', (e) => { state.bgImage.opacity = parseFloat(e.target.value); requestDraw(); });
+        inBgOpacity.addEventListener('change', autoSave);
+        inBgScale.addEventListener('input', (e) => { state.bgImage.scale = parseFloat(e.target.value); requestDraw(); });
+        inBgScale.addEventListener('change', autoSave);
+        btnBgToggle.addEventListener('click', () => { state.bgImage.visible = !state.bgImage.visible; updateUI(); autoSave(); requestDraw(); });
+        btnBgRemove.addEventListener('click', () => { state.bgImage.src = null; state.bgImage.imgObj = null; inBgUpload.value = ''; updateUI(); autoSave(); requestDraw(); });
+
+        // --- GESTION DES DONNEES ---
+        document.getElementById('btn-print').addEventListener('click', () => {
+            const printInfo = document.getElementById('print-info');
+            const dateStr = new Date(state.date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = formatTime(state.time);
+            
+            printInfo.innerHTML = `
+                <h2>PERDIRFORMANCE LOGI-SunExam</h2>
+                <p>Plan Édité le : ${new Date().toLocaleDateString('fr-FR')} - Simulation Solaire : ${dateStr} à ${timeStr}</p>
+            `;
+            
+            const cropCanvas = document.createElement('canvas');
+            cropCanvas.width = workspace.clientWidth;
+            cropCanvas.height = workspace.clientHeight;
+            const cropCtx = cropCanvas.getContext('2d');
+            
+            cropCtx.fillStyle = '#EAECEE';
+            cropCtx.fillRect(0, 0, cropCanvas.width, cropCanvas.height);
+            
+            cropCtx.drawImage(
+                canvas, 
+                -workspace.scrollLeft, 
+                -workspace.scrollTop, 
+                canvas.width * state.zoom, 
+                canvas.height * state.zoom
+            );
+            
+            const printImage = document.getElementById('print-image');
+            printImage.src = cropCanvas.toDataURL('image/png');
+            
+            setTimeout(() => { window.print(); }, 300);
+        });
+
+        // --- GESTION DE LA MODALE DE NOTICE ---
+        const modalNotice = document.getElementById('modal-notice');
+        document.getElementById('btn-notice').addEventListener('click', () => modalNotice.classList.add('show') );
+        document.getElementById('close-notice').addEventListener('click', () => modalNotice.classList.remove('show') );
+        window.addEventListener('click', (e) => { if (e.target === modalNotice) modalNotice.classList.remove('show'); });
+
+        function getExportData() {
+            return JSON.stringify({
+                lat: state.lat,
+                lng: state.lng,
+                alt: state.alt,
+                date: state.date.toISOString(),
+                time: state.time,
+                buildings: state.buildings,
+                objects: state.objects,
+                texts: state.texts, // Export des annotations textuelles
+                bgImage: {
+                    src: state.bgImage.src,
+                    opacity: state.bgImage.opacity,
+                    scale: state.bgImage.scale,
+                    x: state.bgImage.x,
+                    y: state.bgImage.y,
+                    visible: state.bgImage.visible
+                }
+            });
+        }
+
+        function loadData(jsonString) {
+            try {
+                const data = JSON.parse(jsonString);
+                state.lat = data.lat || 16.26;
+                state.lng = data.lng || -61.58;
+                state.alt = data.alt || 0;
+                if(data.date) state.date = new Date(data.date);
+                state.time = data.time || 12;
+                state.buildings = data.buildings || [];
+                state.objects = data.objects || [];
+                state.texts = data.texts || [];
+                
+                inLat.value = state.lat;
+                inLng.value = state.lng;
+                inAlt.value = Math.round(state.alt);
+                inDate.value = state.date.toISOString().split('T')[0];
+                inTime.value = state.time;
+                timeVal.textContent = formatTime(state.time);
+
+                if (data.bgImage && data.bgImage.src) {
+                    state.bgImage.src = data.bgImage.src;
+                    state.bgImage.opacity = data.bgImage.opacity;
+                    state.bgImage.scale = data.bgImage.scale;
+                    state.bgImage.x = data.bgImage.x;
+                    state.bgImage.y = data.bgImage.y;
+                    state.bgImage.visible = data.bgImage.visible;
+                    
+                    const img = new Image();
+                    img.onload = () => {
+                        state.bgImage.imgObj = img;
+                        updateUI();
+                        requestDraw();
+                    };
+                    img.src = state.bgImage.src;
+                } else {
+                    state.bgImage.src = null;
+                    state.bgImage.imgObj = null;
+                    updateUI();
+                }
+                
+                state.selectedBuildingId = null;
+                state.selectedObjectId = null;
+                state.selectedTextId = null;
+                updateUI(); requestDraw();
+            } catch (e) {
+                console.error("Échec du traitement des données enregistrées.");
+            }
+        }
+
+        function autoSave() {
+            try { localStorage.setItem('perdirformance_sun_sim', getExportData()); } 
+            catch (e) { console.warn("L'image est trop lourde pour la sauvegarde automatique locale."); }
+        }
+
+        document.getElementById('btn-export').addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(getExportData());
+            const dlAnchorElem = document.createElement('a');
+            dlAnchorElem.setAttribute("href", dataStr);
+            dlAnchorElem.setAttribute("download", "plan_etablissement_eple.json");
+            dlAnchorElem.click(); dlAnchorElem.remove();
+        });
+
+        document.getElementById('btn-import').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => loadData(e.target.result);
+            reader.readAsText(file);
+            e.target.value = ''; 
+        });
+
+        // --- HORLOGE EN-TÊTE ---
+        function updateHeaderClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+            const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('current-datetime').textContent = `${dateStr} - ${timeStr}`;
+        }
+        setInterval(updateHeaderClock, 1000); updateHeaderClock();
+
+        // --- INITIALISATION ---
+        function init() {
+            workspace.scrollLeft = 2000 - workspace.clientWidth / 2;
+            workspace.scrollTop = 1500 - workspace.clientHeight / 2;
+            applyZoom();
+
+            const saved = localStorage.getItem('perdirformance_sun_sim');
+            if (saved) {
+                loadData(saved);
+            } else {
+                updateUI(); requestDraw();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
